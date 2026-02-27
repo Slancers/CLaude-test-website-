@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="GrindCoach — Professional skateboarding coaching and classes for all ages and skill levels." />
+  <title>GrindCoach — Learn to Shred</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --neon: #39FF14;
+      --orange: #FF6B2B;
+      --cyan: #00D4FF;
+      --pink: #FF2D7B;
+      --purple: #B44DFF;
+      --gold: #FFD700;
+      --bg: #0a0a0a;
+      --surface: rgba(255,255,255,0.03);
+      --border: rgba(255,255,255,0.06);
+      --text: rgba(255,255,255,0.6);
+      --text-dim: rgba(255,255,255,0.35);
+      --font-display: 'Permanent Marker', cursive;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: var(--font-mono);
+      overflow-x: hidden;
+    }
+
+    ::selection { background: var(--neon); color: var(--bg); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--neon); }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ── Noise Overlay ── */
+    .noise {
+      position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0.03;
+    }
+
+    /* ── Animate In ── */
+    .reveal {
+      opacity: 0; transform: translateY(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── Nav ── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      transition: background 0.4s, backdrop-filter 0.4s, border-color 0.4s;
+      padding: 0 24px; border-bottom: 1px solid transparent;
+    }
+    .nav.scrolled {
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom-color: rgba(255,255,255,0.06);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; height: 72px;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px; cursor: pointer;
+    }
+    .nav-logo span:first-child { font-size: 28px; }
+    .nav-logo span:last-child {
+      font-family: var(--font-display); font-size: 22px; letter-spacing: 1px;
+    }
+    .nav-logo .accent { color: var(--neon); }
+
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      background: none; border: none; color: var(--text);
+      font-family: var(--font-mono); font-size: 13px; letter-spacing: 2px;
+      text-transform: uppercase; cursor: pointer; padding: 8px 0;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--neon); }
+
+    .btn-book {
+      background: var(--neon); color: var(--bg); border: none;
+      padding: 10px 24px; font-family: var(--font-mono); font-size: 12px;
+      font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+      transition: transform 0.2s;
+    }
+    .btn-book:hover { transform: scale(1.05); }
+
+    .nav-toggle {
+      display: none; background: none; border: none;
+      color: #fff; font-size: 28px; cursor: pointer;
+    }
+
+    .mobile-menu {
+      display: none; position: absolute; top: 72px; left: 0; right: 0;
+      background: rgba(10,10,10,0.98); backdrop-filter: blur(20px);
+      padding: 24px; flex-direction: column; gap: 16px;
+      border-bottom: 1px solid rgba(57,255,20,0.2);
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      color: #fff; font-family: var(--font-mono); font-size: 16px;
+      letter-spacing: 2px; text-transform: uppercase; padding: 8px 0;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; padding: 120px 24px 80px; text-align: center;
+    }
+    .hero-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 30%, rgba(57,255,20,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 70%, rgba(255,107,43,0.06) 0%, transparent 60%),
+        linear-gradient(180deg, #0a0a0a 0%, #111 100%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0; z-index: 1; opacity: 0.04;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-stripe {
+      position: absolute; top: -200px; right: -100px; width: 500px; height: 800px;
+      background: linear-gradient(135deg, rgba(57,255,20,0.05), transparent);
+      transform: rotate(-15deg); z-index: 1;
+    }
+    .hero-content { position: relative; z-index: 2; max-width: 900px; }
+    .hero-tag {
+      font-size: 13px; letter-spacing: 6px; color: var(--neon);
+      text-transform: uppercase; margin-bottom: 24px; opacity: 0.9;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(48px, 10vw, 110px);
+      line-height: 1; letter-spacing: -1px;
+    }
+    .hero h1 .gradient {
+      background: linear-gradient(135deg, var(--neon), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: clamp(14px, 2vw, 18px); color: var(--text);
+      max-width: 550px; margin: 32px auto; line-height: 1.7;
+    }
+    .hero-buttons {
+      display: flex; gap: 16px; justify-content: center;
+      flex-wrap: wrap; margin-top: 40px;
+    }
+    .btn-hero-primary {
+      background: var(--neon); color: var(--bg); border: none;
+      padding: 16px 40px; font-family: var(--font-mono); font-size: 14px;
+      font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      cursor: pointer; clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+      transition: transform 0.2s;
+    }
+    .btn-hero-primary:hover { transform: scale(1.05); }
+    .btn-hero-secondary {
+      background: transparent; color: #fff;
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 16px 40px; font-family: var(--font-mono); font-size: 14px;
+      letter-spacing: 3px; text-transform: uppercase; cursor: pointer;
+      clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+      transition: border-color 0.3s;
+    }
+    .btn-hero-secondary:hover { border-color: var(--neon); }
+
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 32px; margin-top: 80px; padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .stat-number {
+      font-family: var(--font-display); font-size: 32px; color: var(--neon);
+    }
+    .stat-label {
+      font-size: 11px; color: rgba(255,255,255,0.4);
+      letter-spacing: 2px; text-transform: uppercase; margin-top: 4px;
+    }
+
+    .scroll-indicator {
+      position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      opacity: 0.4; animation: bounce 2s infinite;
+    }
+    .scroll-indicator span:first-child {
+      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    }
+    .scroll-indicator span:last-child { color: var(--neon); font-size: 18px; }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ── Section Common ── */
+    .section { padding: 120px 24px; position: relative; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-tag {
+      font-size: 12px; letter-spacing: 6px; color: var(--neon);
+      text-transform: uppercase; margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 6vw, 64px);
+      margin: 0 0 48px;
+    }
+    .section-divider {
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    }
+
+    /* ── Classes ── */
+    .filters { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 48px; }
+    .filter-btn {
+      padding: 8px 20px; font-family: var(--font-mono); font-size: 12px;
+      letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+      transition: all 0.3s; background: rgba(255,255,255,0.05);
+      color: var(--text); border: 1px solid rgba(255,255,255,0.1);
+    }
+    .filter-btn.active {
+      background: var(--neon); color: var(--bg); border-color: var(--neon);
+    }
+
+    .class-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px;
+    }
+    .class-card {
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 32px; position: relative; overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s; cursor: pointer;
+    }
+    .class-card:hover { transform: translateY(-4px); }
+    .class-accent {
+      position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    }
+    .class-header {
+      display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;
+    }
+    .class-meta {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      display: block; margin-bottom: 8px;
+    }
+    .class-name {
+      font-family: var(--font-display); font-size: 26px; margin: 0;
+    }
+    .class-price {
+      font-family: var(--font-display); font-size: 32px; text-align: right;
+    }
+    .class-price-label {
+      font-size: 10px; color: rgba(255,255,255,0.4); display: block;
+    }
+    .class-desc {
+      font-size: 13px; color: var(--text); line-height: 1.7; margin: 16px 0 24px;
+    }
+    .class-details {
+      display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+    }
+    .class-detail {
+      font-size: 11px; color: rgba(255,255,255,0.4);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .class-schedule {
+      font-size: 11px; color: var(--text-dim); margin-bottom: 24px;
+    }
+    .class-book-btn {
+      width: 100%; background: transparent; padding: 12px;
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+      transition: all 0.3s;
+    }
+    .class-book-btn:hover { color: var(--bg) !important; }
+
+    .bring-box {
+      margin-top: 80px; padding: 40px;
+      background: rgba(57,255,20,0.03); border: 1px solid rgba(57,255,20,0.1);
+    }
+    .bring-box h3 {
+      font-family: var(--font-display); font-size: 24px; color: var(--neon); margin: 0 0 16px;
+    }
+    .bring-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;
+    }
+    .bring-item {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 13px; color: var(--text);
+    }
+
+    /* ── About ── */
+    .about-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+    }
+    .about-image {
+      aspect-ratio: 4/5; background: linear-gradient(135deg, rgba(57,255,20,0.08), rgba(0,212,255,0.08));
+      border: 1px solid var(--border); display: flex; align-items: center;
+      justify-content: center; position: relative; overflow: hidden;
+    }
+    .about-image-emoji { font-size: 120px; opacity: 0.4; }
+    .about-image-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0; padding: 24px;
+      background: linear-gradient(transparent, rgba(10,10,10,0.9));
+    }
+    .about-image-overlay span {
+      font-size: 11px; letter-spacing: 3px; color: var(--neon); text-transform: uppercase;
+    }
+    .about-bio p {
+      font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.8; margin-bottom: 24px;
+    }
+    .certs { display: flex; flex-wrap: wrap; gap: 12px; }
+    .cert {
+      padding: 8px 16px; border: 1px solid rgba(255,255,255,0.1);
+      font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 1px;
+    }
+
+    /* ── Testimonials ── */
+    .testimonials { margin-top: 120px; }
+    .testimonials h3 {
+      font-family: var(--font-display); font-size: 36px; margin-bottom: 48px;
+    }
+    .testimonial-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px;
+    }
+    .testimonial-card {
+      padding: 32px; background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border); height: 100%;
+    }
+    .testimonial-stars { color: var(--gold); font-size: 16px; letter-spacing: 2px; margin-bottom: 16px; }
+    .testimonial-text {
+      font-size: 13px; color: var(--text); line-height: 1.8; font-style: italic; margin-bottom: 20px;
+    }
+    .testimonial-author { font-size: 12px; color: var(--neon); letter-spacing: 1px; }
+
+    /* ── Booking ── */
+    .book-form { max-width: 700px; margin: 0 auto; }
+    .book-form p.sub {
+      font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 48px; line-height: 1.7;
+    }
+    .form-fields { display: flex; flex-direction: column; gap: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1); color: #fff;
+      padding: 14px 16px; font-family: var(--font-mono); font-size: 13px;
+      outline: none; transition: border-color 0.3s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--neon);
+    }
+    .form-input::placeholder, .form-textarea::placeholder {
+      color: rgba(255,255,255,0.25);
+    }
+    .form-select { appearance: none; color: rgba(255,255,255,0.35); }
+    .form-select.filled { color: #fff; }
+    .form-select option { background: #1a1a1a; color: #fff; }
+    .form-textarea { resize: vertical; }
+
+    .btn-submit {
+      background: var(--neon); color: var(--bg); border: none;
+      padding: 16px 40px; font-family: var(--font-mono); font-size: 14px;
+      font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+      cursor: pointer; clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+      transition: opacity 0.3s, transform 0.2s; opacity: 0.4;
+    }
+    .btn-submit.ready { opacity: 1; }
+    .btn-submit:hover { transform: scale(1.02); }
+
+    .form-note {
+      font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 8px;
+    }
+
+    .booking-success {
+      text-align: center; padding: 80px 24px; display: none;
+    }
+    .booking-success.show { display: block; }
+    .booking-success .emoji { font-size: 64px; margin-bottom: 24px; }
+    .booking-success h3 {
+      font-family: var(--font-display); font-size: 36px; color: var(--neon); margin-bottom: 16px;
+    }
+    .booking-success p { font-size: 14px; color: var(--text); }
+    .btn-again {
+      background: transparent; border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; padding: 12px 32px; font-family: var(--font-mono);
+      font-size: 12px; letter-spacing: 2px; cursor: pointer; margin-top: 24px;
+    }
+
+    /* ── Contact ── */
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+    }
+    .contact-items { display: flex; flex-direction: column; gap: 24px; }
+    .contact-item { display: flex; gap: 16px; align-items: flex-start; }
+    .contact-item .icon { font-size: 24px; }
+    .contact-item .label {
+      font-size: 11px; color: rgba(255,255,255,0.4);
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .contact-item .value { font-size: 14px; color: rgba(255,255,255,0.8); }
+
+    .social-links { display: flex; gap: 16px; margin-top: 40px; }
+    .social-btn {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 20px; font-family: var(--font-mono); font-size: 12px;
+      letter-spacing: 1px; cursor: pointer; transition: border-color 0.3s;
+    }
+
+    .map-placeholder {
+      width: 100%; aspect-ratio: 1; background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border); display: flex; align-items: center;
+      justify-content: center; flex-direction: column; gap: 16px;
+    }
+    .map-placeholder .icon { font-size: 64px; opacity: 0.3; }
+    .map-placeholder .text { font-size: 13px; color: rgba(255,255,255,0.3); }
+    .map-placeholder .sub { font-size: 11px; color: rgba(255,255,255,0.2); }
+
+    /* ── Footer ── */
+    .footer {
+      padding: 40px 24px; border-top: 1px solid var(--border);
+      background: rgba(0,0,0,0.3);
+    }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto; display: flex;
+      justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo {
+      font-family: var(--font-display); font-size: 18px; color: rgba(255,255,255,0.3);
+    }
+    .footer-logo .accent { color: rgba(57,255,20,0.4); }
+    .footer-copy {
+      font-size: 11px; color: rgba(255,255,255,0.2); letter-spacing: 1px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none !important; }
+      .nav-toggle { display: block !important; }
+      .about-grid, .contact-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
+      .form-row { grid-template-columns: 1fr !important; }
+      .class-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Noise -->
+<svg class="noise"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>
+
+<!-- ═══════ NAV ═══════ -->
+<nav class="nav" id="navbar">
+  <div class="nav-inner">
+    <a href="#home" class="nav-logo">
+      <span>🛹</span>
+      <span>GRIND<span class="accent">COACH</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="#home" class="active">Home</a>
+      <a href="#classes">Classes</a>
+      <a href="#about">About</a>
+      <a href="#book">Book</a>
+      <a href="#contact">Contact</a>
+      <a href="#book" class="btn-book">Book Now</a>
+    </div>
+    <button class="nav-toggle" onclick="toggleMenu()" aria-label="Menu">☰</button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#home" onclick="closeMenu()">Home</a>
+    <a href="#classes" onclick="closeMenu()">Classes</a>
+    <a href="#about" onclick="closeMenu()">About</a>
+    <a href="#book" onclick="closeMenu()">Book</a>
+    <a href="#contact" onclick="closeMenu()">Contact</a>
+  </div>
+</nav>
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-stripe"></div>
+
+  <div class="hero-content">
+    <div class="reveal" data-delay="0">
+      <div class="hero-tag">Skateboarding Coach &amp; Academy</div>
+    </div>
+    <div class="reveal" data-delay="150">
+      <h1>LEARN TO<br><span class="gradient">SHRED</span></h1>
+    </div>
+    <div class="reveal" data-delay="300">
+      <p class="hero-sub">From your first push to your first kickflip — structured coaching for every level. No ego, just progress.</p>
+    </div>
+    <div class="reveal" data-delay="450">
+      <div class="hero-buttons">
+        <a href="#book" class="btn-hero-primary">Book a Class</a>
+        <a href="#classes" class="btn-hero-secondary">View Classes</a>
+      </div>
+    </div>
+    <div class="reveal" data-delay="600">
+      <div class="stats-bar">
+        <div><div class="stat-number">12+</div><div class="stat-label">Years Coaching</div></div>
+        <div><div class="stat-number">2,500+</div><div class="stat-label">Students Trained</div></div>
+        <div><div class="stat-number">50+</div><div class="stat-label">Contest Podiums</div></div>
+        <div><div class="stat-number">4.9★</div><div class="stat-label">Average Rating</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-indicator">
+    <span>Scroll</span>
+    <span>↓</span>
+  </div>
+</section>
+
+<!-- ═══════ CLASSES ═══════ -->
+<section class="section" id="classes">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-tag">Programs</div>
+      <h2 class="section-title">CLASSES & <span style="color:var(--orange)">SESSIONS</span></h2>
+    </div>
+
+    <div class="reveal" data-delay="100">
+      <div class="filters">
+        <button class="filter-btn active" data-filter="All">All</button>
+        <button class="filter-btn" data-filter="Beginner">Beginner</button>
+        <button class="filter-btn" data-filter="Intermediate">Intermediate</button>
+        <button class="filter-btn" data-filter="Advanced">Advanced</button>
+        <button class="filter-btn" data-filter="Kids">Kids</button>
+      </div>
+    </div>
+
+    <div class="class-grid" id="classGrid"></div>
+
+    <div class="reveal" data-delay="200">
+      <div class="bring-box">
+        <h3>What to Bring</h3>
+        <div class="bring-grid">
+          <div class="bring-item"><span>🛹</span> Your own board (loaners available)</div>
+          <div class="bring-item"><span>🪖</span> Helmet (required, provided free)</div>
+          <div class="bring-item"><span>💧</span> Water bottle</div>
+          <div class="bring-item"><span>👟</span> Flat-sole skate shoes</div>
+          <div class="bring-item"><span>🛡️</span> Pads (recommended for beginners)</div>
+          <div class="bring-item"><span>💪</span> A good attitude</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ ABOUT ═══════ -->
+<section class="section" id="about">
+  <div class="section-divider" style="background:linear-gradient(90deg,transparent,rgba(57,255,20,0.3),transparent)"></div>
+  <div class="section-inner">
+    <div class="about-grid">
+      <div class="reveal">
+        <div class="about-image">
+          <span class="about-image-emoji">🛹</span>
+          <div class="about-image-overlay">
+            <span>Est. 2013 · Your City</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="reveal">
+          <div class="section-tag">The Coach</div>
+          <h2 class="section-title" style="margin-bottom:24px;line-height:1.1">
+            SKATING IS A <span style="color:var(--cyan)">LIFESTYLE</span>, NOT JUST A SPORT
+          </h2>
+        </div>
+        <div class="reveal about-bio" data-delay="150">
+          <p>I've been on a board since I was 9. Competed nationally for a decade, coached for 12+ years, and trained over 2,500 skaters from first-timers to podium finishers.</p>
+          <p>My philosophy is simple: progression through repetition, confidence through small wins, and fun above everything. Whether you're 6 or 60, I'll meet you where you are and push you further than you thought possible.</p>
+        </div>
+        <div class="reveal" data-delay="300">
+          <div class="certs">
+            <span class="cert">USA Skateboarding Certified</span>
+            <span class="cert">CPR & First Aid</span>
+            <span class="cert">Youth Sports Psychology</span>
+            <span class="cert">10+ Contest Wins</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="testimonials">
+      <div class="reveal">
+        <h3>WHAT THEY <span style="color:var(--orange)">SAY</span></h3>
+      </div>
+      <div class="testimonial-grid">
+        <div class="reveal" data-delay="0">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="testimonial-text">"Went from barely standing on a board to landing kickflips in 3 months. Coach kept it real and made every session count."</p>
+            <div class="testimonial-author">— Marcus T. (16)</div>
+          </div>
+        </div>
+        <div class="reveal" data-delay="100">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="testimonial-text">"I'm 28 and always wanted to learn. No judgment, just pure stoke. Best decision I made this year."</p>
+            <div class="testimonial-author">— Sarah K. (28)</div>
+          </div>
+        </div>
+        <div class="reveal" data-delay="200">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="testimonial-text">"The competition prep class got me 2nd place at my first local contest. The video analysis sessions are insane."</p>
+            <div class="testimonial-author">— David R. (14)</div>
+          </div>
+        </div>
+        <div class="reveal" data-delay="300">
+          <div class="testimonial-card">
+            <div class="testimonial-stars">★★★★★</div>
+            <p class="testimonial-text">"My 8-year-old LOVES the Lil' Shredders class. He's gained so much confidence, not just on the board but everywhere."</p>
+            <div class="testimonial-author">— Linda M. (Parent)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ BOOKING ═══════ -->
+<section class="section" id="book">
+  <div class="section-divider" style="background:linear-gradient(90deg,transparent,rgba(255,107,43,0.3),transparent)"></div>
+
+  <div class="book-form" id="bookForm">
+    <div class="reveal">
+      <div class="section-tag">Reserve Your Spot</div>
+      <h2 class="section-title">BOOK A <span style="color:var(--orange)">SESSION</span></h2>
+      <p class="sub">Fill out the form and I'll get back to you within 24 hours to confirm your spot. Drop-ins welcome for group classes (subject to availability).</p>
+    </div>
+
+    <div class="reveal" data-delay="150">
+      <div class="form-fields">
+        <div class="form-row">
+          <input class="form-input" type="text" placeholder="Your Name *" id="fname" />
+          <input class="form-input" type="email" placeholder="Email *" id="femail" />
+        </div>
+        <input class="form-input" type="tel" placeholder="Phone (optional)" id="fphone" />
+        <select class="form-select" id="fclass" onchange="this.classList.toggle('filled', this.value !== '')">
+          <option value="" disabled selected>Select a Class *</option>
+          <option value="Fundamentals">Fundamentals — $35/session</option>
+          <option value="Street Skills">Street Skills — $55/session</option>
+          <option value="Bowl & Transition">Bowl & Transition — $55/session</option>
+          <option value="Competition Prep">Competition Prep — $85/session</option>
+          <option value="Private 1-on-1">Private 1-on-1 — $95/session</option>
+          <option value="Lil' Shredders">Lil' Shredders — $30/session</option>
+        </select>
+        <select class="form-select" id="flevel" onchange="this.classList.toggle('filled', this.value !== '')">
+          <option value="" disabled selected>Your Skill Level</option>
+          <option>Complete Beginner</option>
+          <option>Can ride but no tricks</option>
+          <option>Know some tricks</option>
+          <option>Advanced / Competitive</option>
+        </select>
+        <textarea class="form-textarea" rows="4" placeholder="Anything else I should know? (injuries, goals, etc.)" id="fmsg"></textarea>
+        <button class="btn-submit" id="submitBtn" onclick="submitBooking()">Reserve My Spot →</button>
+        <p class="form-note">💳 Payment collected at the park. Cancellation free up to 24h before class.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="booking-success" id="bookSuccess">
+    <div class="emoji">🤙</div>
+    <h3>YOU'RE IN!</h3>
+    <p>Check your email for confirmation. See you at the park.</p>
+    <button class="btn-again" onclick="resetBooking()">Book Another</button>
+  </div>
+</section>
+
+<!-- ═══════ CONTACT ═══════ -->
+<section class="section" id="contact">
+  <div class="section-divider" style="background:linear-gradient(90deg,transparent,rgba(0,212,255,0.3),transparent)"></div>
+  <div class="section-inner">
+    <div class="contact-grid">
+      <div class="reveal">
+        <div class="section-tag">Get in Touch</div>
+        <h2 class="section-title">LET'S <span style="color:var(--cyan)">CONNECT</span></h2>
+        <div class="contact-items">
+          <div class="contact-item">
+            <span class="icon">📧</span>
+            <div><div class="label">Email</div><div class="value">coach@grindcoach.com</div></div>
+          </div>
+          <div class="contact-item">
+            <span class="icon">📱</span>
+            <div><div class="label">Phone / WhatsApp</div><div class="value">+1 (555) SKATE-01</div></div>
+          </div>
+          <div class="contact-item">
+            <span class="icon">📍</span>
+            <div><div class="label">Location</div><div class="value">Downtown Skatepark, Your City</div></div>
+          </div>
+          <div class="contact-item">
+            <span class="icon">⏰</span>
+            <div><div class="label">Hours</div><div class="value">Mon–Fri 9AM–7PM · Sat–Sun 8AM–5PM</div></div>
+          </div>
+        </div>
+        <div class="social-links">
+          <button class="social-btn" style="color:#E1306C" onmouseenter="this.style.borderColor='#E1306C'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)'">Instagram</button>
+          <button class="social-btn" style="color:#fff" onmouseenter="this.style.borderColor='#fff'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)'">TikTok</button>
+          <button class="social-btn" style="color:#FF0000" onmouseenter="this.style.borderColor='#FF0000'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.1)'">YouTube</button>
+        </div>
+      </div>
+      <div class="reveal" data-delay="150">
+        <div class="map-placeholder">
+          <span class="icon">📍</span>
+          <span class="text">Google Maps Embed</span>
+          <span class="sub">Downtown Skatepark</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <span class="footer-logo">🛹 GRIND<span class="accent">COACH</span></span>
+    <span class="footer-copy">© 2026 GrindCoach. Keep pushing.</span>
+  </div>
+</footer>
+
+<script>
+// ── Class Data ──
+const classes = [
+  { id:1, title:"Fundamentals", level:"Beginner", age:"All Ages", duration:"60 min", groupSize:"8 max", price:35, schedule:"Mon / Wed / Fri — 10:00 AM", description:"Balance, pushing, turning, stopping. Zero experience needed. We start from scratch.", color:"#39FF14", weeks:4 },
+  { id:2, title:"Street Skills", level:"Intermediate", age:"Teens & Adults", duration:"90 min", groupSize:"6 max", price:55, schedule:"Tue / Thu — 5:00 PM", description:"Ollies, kickflips, grinds, and manual combos. Time to level up your street game.", color:"#FF6B2B", weeks:6 },
+  { id:3, title:"Bowl & Transition", level:"Intermediate", age:"Teens & Adults", duration:"90 min", groupSize:"6 max", price:55, schedule:"Sat — 9:00 AM", description:"Drops, pumping, carving, rock-to-fakies. Own the bowl.", color:"#00D4FF", weeks:6 },
+  { id:4, title:"Competition Prep", level:"Advanced", age:"Teens & Adults", duration:"120 min", groupSize:"4 max", price:85, schedule:"Sat / Sun — 2:00 PM", description:"Line building, contest strategy, video analysis. For skaters ready to compete.", color:"#FF2D7B", weeks:8 },
+  { id:5, title:"Private 1-on-1", level:"Any Level", age:"All Ages", duration:"60 min", groupSize:"1-on-1", price:95, schedule:"Flexible — Book Anytime", description:"Fully customized session. Your goals, your pace, my undivided attention.", color:"#B44DFF", weeks:null },
+  { id:6, title:"Lil' Shredders", level:"Beginner", age:"Kids (5-12)", duration:"45 min", groupSize:"6 max", price:30, schedule:"Sat / Sun — 10:00 AM", description:"Fun-first approach for kids. Safety, balance, and building confidence on the board.", color:"#FFD700", weeks:4 },
+];
+
+let activeFilter = "All";
+
+function renderClasses() {
+  const grid = document.getElementById("classGrid");
+  const filtered = classes.filter(c => {
+    if (activeFilter === "All") return true;
+    if (activeFilter === "Kids") return c.age.includes("Kids");
+    return c.level === activeFilter;
+  });
+
+  grid.innerHTML = filtered.map((c, i) => `
+    <div class="reveal class-card" data-delay="${i * 80}" data-color="${c.color}"
+         onmouseenter="this.style.borderColor='${c.color}'"
+         onmouseleave="this.style.borderColor='rgba(255,255,255,0.06)'">
+      <div class="class-accent" style="background:${c.color}"></div>
+      <div class="class-header">
+        <div>
+          <span class="class-meta" style="color:${c.color}">${c.level} · ${c.age}</span>
+          <h3 class="class-name">${c.title}</h3>
+        </div>
+        <div>
+          <span class="class-price" style="color:${c.color}">$${c.price}</span>
+          <span class="class-price-label">/session</span>
+        </div>
+      </div>
+      <p class="class-desc">${c.description}</p>
+      <div class="class-details">
+        <span class="class-detail">⏱ ${c.duration}</span>
+        <span class="class-detail">👥 ${c.groupSize}</span>
+        <span class="class-detail">📅 ${c.weeks ? c.weeks + ' weeks' : 'Flexible'}</span>
+      </div>
+      <div class="class-schedule">📍 ${c.schedule}</div>
+      <button class="class-book-btn" style="border:1px solid ${c.color}; color:${c.color}"
+              onmouseenter="this.style.background='${c.color}'; this.style.color='#0a0a0a'"
+              onmouseleave="this.style.background='transparent'; this.style.color='${c.color}'"
+              onclick="document.getElementById('book').scrollIntoView({behavior:'smooth'})">
+        Book This Class →
+      </button>
+    </div>
+  `).join("");
+
+  initReveal();
+}
+
+// ── Filters ──
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeFilter = btn.dataset.filter;
+    renderClasses();
+  });
+});
+
+// ── Scroll Reveal ──
+function initReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const delay = entry.target.dataset.delay || 0;
+        setTimeout(() => entry.target.classList.add("visible"), parseInt(delay));
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll(".reveal:not(.visible)").forEach(el => observer.observe(el));
+}
+
+// ── Nav Scroll ──
+window.addEventListener("scroll", () => {
+  const nav = document.getElementById("navbar");
+  nav.classList.toggle("scrolled", window.scrollY > 50);
+
+  // Active section
+  const sections = ["home", "classes", "about", "book", "contact"];
+  for (const id of [...sections].reverse()) {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 300) {
+      document.querySelectorAll(".nav-links a").forEach(a => {
+        a.classList.toggle("active", a.getAttribute("href") === "#" + id);
+      });
+      break;
+    }
+  }
+});
+
+// ── Mobile Menu ──
+function toggleMenu() {
+  const menu = document.getElementById("mobileMenu");
+  const btn = document.querySelector(".nav-toggle");
+  const open = menu.classList.toggle("open");
+  btn.textContent = open ? "✕" : "☰";
+}
+function closeMenu() {
+  document.getElementById("mobileMenu").classList.remove("open");
+  document.querySelector(".nav-toggle").textContent = "☰";
+}
+
+// ── Booking Form ──
+function checkForm() {
+  const name = document.getElementById("fname").value;
+  const email = document.getElementById("femail").value;
+  const cls = document.getElementById("fclass").value;
+  document.getElementById("submitBtn").classList.toggle("ready", name && email && cls);
+}
+["fname","femail","fphone","fclass","flevel","fmsg"].forEach(id => {
+  document.getElementById(id).addEventListener("input", checkForm);
+  document.getElementById(id).addEventListener("change", checkForm);
+});
+
+function submitBooking() {
+  const name = document.getElementById("fname").value;
+  const email = document.getElementById("femail").value;
+  const cls = document.getElementById("fclass").value;
+  if (!name || !email || !cls) return;
+  document.getElementById("bookForm").style.display = "none";
+  document.getElementById("bookSuccess").classList.add("show");
+}
+
+function resetBooking() {
+  ["fname","femail","fphone","fmsg"].forEach(id => document.getElementById(id).value = "");
+  ["fclass","flevel"].forEach(id => { const s = document.getElementById(id); s.selectedIndex = 0; s.classList.remove("filled"); });
+  document.getElementById("submitBtn").classList.remove("ready");
+  document.getElementById("bookForm").style.display = "block";
+  document.getElementById("bookSuccess").classList.remove("show");
+}
+
+// ── Init ──
+renderClasses();
+initReveal();
+</script>
+</body>
+</html>
